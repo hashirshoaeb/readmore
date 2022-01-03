@@ -1,5 +1,7 @@
 library readmore;
 
+import 'dart:math';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
@@ -13,9 +15,9 @@ class ReadMoreText extends StatefulWidget {
     this.data, {
     Key? key,
     this.preDataText,
-    this.postDataText,
+    // this.postDataText,
     this.preDataTextStyle,
-    this.postDataTextStyle,
+    // this.postDataTextStyle,
     this.trimExpandedText = 'show less',
     this.trimCollapsedText = 'read more',
     this.colorClickableText,
@@ -56,13 +58,13 @@ class ReadMoreText extends StatefulWidget {
   final String? preDataText;
 
   /// Textspan used after the data end or before the more/less
-  final String? postDataText;
+  // final String? postDataText;
 
   /// Textspan used before the data any heading or somthing
   final TextStyle? preDataTextStyle;
 
   /// Textspan used after the data end or before the more/less
-  final TextStyle? postDataTextStyle;
+  // final TextStyle? postDataTextStyle;
 
   ///Called when state change between expanded/compress
   final Function(bool val)? callback;
@@ -144,26 +146,20 @@ class ReadMoreTextState extends State<ReadMoreText> {
         final double maxWidth = constraints.maxWidth;
 
         TextSpan? preTextSpan;
-        TextSpan? postTextSpan;
+        // TextSpan? postTextSpan;
         if (widget.preDataText != null)
           preTextSpan = TextSpan(
             text: widget.preDataText! + " ",
             style: widget.preDataTextStyle ?? effectiveTextStyle,
           );
-        if (widget.postDataText != null)
-          postTextSpan = TextSpan(
-            text: " " + widget.postDataText!,
-            style: widget.postDataTextStyle ?? effectiveTextStyle,
-          );
+        // if (widget.postDataText != null)
+        //   postTextSpan = TextSpan(
+        //     text: " " + widget.postDataText!,
+        //     style: widget.postDataTextStyle ?? effectiveTextStyle,
+        //   );
 
         // Create a TextSpan with data
-        final text = TextSpan(
-          children: [
-            if (preTextSpan != null) preTextSpan,
-            TextSpan(text: widget.data, style: effectiveTextStyle),
-            if (postTextSpan != null) postTextSpan
-          ],
-        );
+        final text = TextSpan(text: widget.data, style: effectiveTextStyle);
 
         // Layout and measure link
         TextPainter textPainter = TextPainter(
@@ -183,10 +179,22 @@ class ReadMoreTextState extends State<ReadMoreText> {
         textPainter.layout(minWidth: 0, maxWidth: maxWidth);
         final delimiterSize = textPainter.size;
 
+        // pre Layout and measure text
+        textPainter.text = preTextSpan;
+        textPainter.layout(minWidth: 0, maxWidth: maxWidth);
+        final preTextSize = textPainter.size;
+
         // Layout and measure text
         textPainter.text = text;
         textPainter.layout(minWidth: constraints.minWidth, maxWidth: maxWidth);
         final textSize = textPainter.size;
+
+        textPainter.text = TextSpan(children: [
+          if (preTextSpan != null) preTextSpan,
+          text,
+          // postTextSpan,
+        ]);
+        textPainter.layout(minWidth: constraints.minWidth, maxWidth: maxWidth);
 
         // Get the endIndex of data
         bool linkLongerThanLine = false;
@@ -197,8 +205,9 @@ class ReadMoreTextState extends State<ReadMoreText> {
           final pos = textPainter.getPositionForOffset(Offset(
             textDirection == TextDirection.rtl
                 ? readMoreSize
-                : textSize.width - readMoreSize,
-            textSize.height,
+                // minus them becacue they are part of the min(see less) text
+                : textSize.width - readMoreSize - preTextSize.width,
+            max(preTextSize.height, textSize.height),
           ));
           endIndex = textPainter.getOffsetBefore(pos.offset) ?? 0;
         } else {
@@ -254,7 +263,7 @@ class ReadMoreTextState extends State<ReadMoreText> {
             children: [
               if (preTextSpan != null) preTextSpan,
               textSpan,
-              if (postTextSpan != null) postTextSpan,
+              // if (postTextSpan != null) postTextSpan,
             ],
           ),
           textAlign: textAlign,
