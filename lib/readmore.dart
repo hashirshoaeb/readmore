@@ -180,9 +180,14 @@ class ReadMoreTextState extends State<ReadMoreText> {
         final delimiterSize = textPainter.size;
 
         // pre Layout and measure text
-        textPainter.text = preTextSpan;
-        textPainter.layout(minWidth: 0, maxWidth: maxWidth);
-        final preTextSize = textPainter.size;
+        late final preTextSize;
+        if (preTextSpan != null) {
+          textPainter.text = preTextSpan;
+          textPainter.layout(minWidth: 0, maxWidth: maxWidth);
+          preTextSize = textPainter.size;
+        } else {
+          preTextSize = Size.zero;
+        }
 
         // Layout and measure text
         textPainter.text = text;
